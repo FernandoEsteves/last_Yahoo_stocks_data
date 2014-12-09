@@ -1,7 +1,7 @@
 last_Yahoo_stocks_data
 ======================
 
-Matlab Gui for download the last data from Yahoo Finance of every ticker in a personalized list
+Matlab Gui for download the last data from Yahoo Finance of every ticker in a personalized list.
 
 Author     : Fernando Esteves
 e-mail     : esteves9876@gmail.com
@@ -23,14 +23,17 @@ Gui and code creted on Matlab R2014a.
 
 
 
+
+
 HELP:
 1.- I need to run the "actualizar_datos(src,evt, fig_handle)" function from start
 "ultimoPrecio_OpeningFcn" function, to automatically mark with color red or green every row.
 
 2.- I don't know why the fetch function doesn't download all the tickers in my example list, I think it could be because the length of the ticker. With long tickers Yahoo retrieve me with NaN's.
 
-
 If anybody know how to solve this please e-mail me, and if you have any contribution please e-mail me too.
+
+
 
 
 
