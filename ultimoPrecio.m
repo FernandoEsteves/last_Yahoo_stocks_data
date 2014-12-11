@@ -2,8 +2,8 @@ function varargout = ultimoPrecio(varargin)
 
 % Author     : Fernando Esteves
 % e-mail     : esteves9876@gmail.com
-% Cretaed    : 5/12/2014
-% Last Change: 9/12/2014
+% Cretaed    : 05/12/2014
+% Last Change: 11/12/2014
 % 
 % With this function you can get the last stocks data of every Yahoo listed
 % ticker, with auto update every minute or whatever time you want. 
@@ -37,7 +37,7 @@ end
 function varargout = ultimoPrecio_OutputFcn(hObject, eventdata, handles) 
 varargout{1} = handles.output;
 
-
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 % --- Executes just before ultimoPrecio is made visible.
 function ultimoPrecio_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
@@ -53,22 +53,28 @@ start(timer_obj);        % start the timer object
 setappdata(hObject, 'timer_obj', timer_obj');  % save the timer object as app data
 set(handles.fecha, 'string', datestr(now, 1)); % Set date
 
+% Set the default update period
+% In line 102 ther's the swith statement with every case with a numer that...
+% you can set as default here.
+casee=2; %Set as default
+set(handles.popupmenuActualizar, 'Value', casee);
+handles.popupmenuActualizar=casee;
 
+% Set the period depending on your default case
+periodo=60; % Change period in secondas depending on your default case
 
-fileID = fopen('emisoras.txt');
-tickers = transpose(textscan(fileID,'%s'));
-precios=fetch(yahoo,tickers{1});
-precios.Date=datestr(precios.Date, 29);
-porcentaje=(precios.Last*100./(precios.Last-precios.Change))-100;
-datos=table(precios.Symbol, precios.Last, precios.Change, porcentaje, precios.High, precios.Low, precios.Volume);
-datos=table2cell(datos);
-set(handles.tablaDatosPrecios, 'data', datos);
-mensaje= strcat('Última actualización:',  datestr(now, 14));
-set(handles.cuadroMensaje, 'string', mensaje);
-
+%Call the update function and set the timer
+timer_periodo = timer(...
+    'TimerFcn',         {@actualizar_datos, hObject}, ...  % timer function, has to specific the handle to the GUI,
+    'ExecutionMode',    'fixedRate', ...                    %
+    'Period',           periodo, ...                           % updates every xx seconds
+    'TasksToExecute',   inf, ...
+    'BusyMode',         'drop');
+start(timer_periodo);        % start the timer object
+setappdata(hObject, 'timer_periodo', timer_periodo');  % save the timer object as app data
 
 guidata(hObject, handles);
-
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 
 
 
@@ -92,8 +98,8 @@ end
 
 % popupmenuActualizar -> set the update frequency in seconds
 function popupmenuActualizar_Callback(hObject, eventdata, handles)
-tiempo=get(hObject,'Value');
-switch tiempo
+handles.popupmenuActualizar=get(hObject,'Value');
+switch handles.popupmenuActualizar
     case 1 % In case you don't want to update the prices, it delete the timer that update the stocks data
         stop(getappdata(hObject, 'timer_periodo'))
         delete(getappdata(hObject, 'timer_periodo'));
@@ -116,6 +122,7 @@ switch tiempo
         periodo=3300;% Update every x seconds
 end
 if periodo~=0 % Only run this if you want to update prices data
+stop(getappdata(hObject, 'timer_periodo'));
 delete(getappdata(hObject, 'timer_periodo'));  % delete the timer object 
 timer_periodo = timer(...
     'TimerFcn',         {@actualizar_datos, hObject}, ...  % timer function, has to specific the handle to the GUI,
@@ -134,7 +141,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function actualizar_datos(src,evt, fig_handle)
-
 handles = guihandles(fig_handle);
 fileID = fopen('emisoras.txt'); % Read the txt file hat contain the list with the tickers
 tickers = transpose(textscan(fileID,'%s'));
@@ -157,13 +163,15 @@ datos=[ticker, last, change porcentajeDatos, high, low, volumen]; % Create the t
 % Change color data
 negativeIndex=[];
 positiveIndex=[];
+neutralIndex=[];
 for i=1:length(porcentaje) % this loop separate the increasing and decreasing price tickets and get the index
     if porcentaje(i)<0
         negativeIndex = [negativeIndex; find(ismember(datos,porcentajeDatos(i)))];
-    end
-    if porcentaje(i)>0
+    elseif porcentaje(i)>0
         positiveIndex = [positiveIndex; find(ismember(datos,porcentajeDatos(i)))];
-    end
+    elseif porcentaje(i)==0
+        neutralIndex = [neutralIndex; find(ismember(datos,porcentajeDatos(i)))];
+    end    
 end
 
 % get the index of the same row 
@@ -182,18 +190,32 @@ positiveIndex5=positiveIndex+length(datos);
 positiveIndex6=positiveIndex+length(datos)*2;
 positiveIndex7=positiveIndex+length(datos)*3;
 
+% get the index of the same row 
+neutralIndex2=neutralIndex-length(datos);
+neutralIndex3=neutralIndex-length(datos)*2;
+neutralIndex4=neutralIndex-length(datos)*3;
+neutralIndex5=neutralIndex+length(datos);
+neutralIndex6=neutralIndex+length(datos)*2;
+neutralIndex7=neutralIndex+length(datos)*3;
+
+
 % Create a vector with all  the indexes that will change the color
 negativeIndex=[negativeIndex; negativeIndex2; negativeIndex3; negativeIndex4;...
     negativeIndex5; negativeIndex6; negativeIndex7];
 positiveIndex=[positiveIndex; positiveIndex2; positiveIndex3; positiveIndex4;...
     positiveIndex5; positiveIndex6; positiveIndex7];
+neutralIndex=[neutralIndex; neutralIndex2; neutralIndex3; neutralIndex4;...
+    neutralIndex5; neutralIndex6; neutralIndex7];
 
 % Change the color
 datos(negativeIndex) = strcat('<html><div style="width:35px" align="center"><span style="color: #FF0000; font-weight: bold;">', ...
    datos(negativeIndex), '</span></div></html>');   
 datos(positiveIndex) = strcat('<html><div style="width:35px" align="center"><span style="color: #0B610B; font-weight: bold;">', ...
    datos(positiveIndex), '</span></div></html>'); 
+datos(neutralIndex) = strcat('<html><div style="width:35px" align="center"><span style="color: #0404B4; font-weight: bold;">', ...
+   datos(neutralIndex), '</span></div></html>');
 % based on  http://matlabgeeks.com/tips-tutorials/building-a-gui-in-matlab-part-ii-tables/
+%If you want to change the color, in this page you can get the color code: http://html-color-codes.info/
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 
 % Set the table data
@@ -203,6 +225,9 @@ mensaje= strcat('Última actualización:',  datestr(now, 14));
 set(handles.cuadroMensaje, 'string', mensaje);
 beep
 
+% pushbuttonMenu.
+function pushbuttonMenu_Callback(hObject, eventdata, handles)
+menu
 
 function cuadroMensaje_Callback(hObject, eventdata, handles)
 function cuadroMensaje_CreateFcn(hObject, eventdata, handles)
@@ -215,5 +240,6 @@ end
 function figure1_CloseRequestFcn(hObject, eventdata, handles)
 stop(getappdata(hObject, 'timer_obj')); % stops the timer 
 delete(getappdata(hObject, 'timer_obj'));  % delete the timer object 
-delete(timerfindall)
+stop(getappdata(hObject, 'timer_periodo')); % stops the timer 
+delete(getappdata(hObject, 'timer_periodo'));  % delete the timer object 
 delete(hObject);
