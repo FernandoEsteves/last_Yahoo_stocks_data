@@ -37,6 +37,10 @@ end
 function varargout = ultimoPrecio_OutputFcn(hObject, eventdata, handles) 
 varargout{1} = handles.output;
 
+
+
+
+
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 % --- Executes just before ultimoPrecio is made visible.
 function ultimoPrecio_OpeningFcn(hObject, eventdata, handles, varargin)
@@ -122,7 +126,6 @@ switch handles.popupmenuActualizar
         periodo=3300;% Update every x seconds
 end
 if periodo~=0 % Only run this if you want to update prices data
-stop(getappdata(hObject, 'timer_periodo'));
 delete(getappdata(hObject, 'timer_periodo'));  % delete the timer object 
 timer_periodo = timer(...
     'TimerFcn',         {@actualizar_datos, hObject}, ...  % timer function, has to specific the handle to the GUI,
@@ -240,6 +243,5 @@ end
 function figure1_CloseRequestFcn(hObject, eventdata, handles)
 stop(getappdata(hObject, 'timer_obj')); % stops the timer 
 delete(getappdata(hObject, 'timer_obj'));  % delete the timer object 
-stop(getappdata(hObject, 'timer_periodo')); % stops the timer 
 delete(getappdata(hObject, 'timer_periodo'));  % delete the timer object 
 delete(hObject);
